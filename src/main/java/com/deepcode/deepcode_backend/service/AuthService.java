@@ -7,7 +7,7 @@ import com.deepcode.deepcode_backend.entity.UserModel;
 import com.deepcode.deepcode_backend.security.JwtUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.deepcode.deepcode_backend.service.UserService;
+
 
 import java.util.Optional;
 
