@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /// Controlador REST para endpoints de autenticación
 @RestController
-@RequestMapping("/auth") // Ruta base: /auth
+@RequestMapping("/auth") /// Ruta base: /auth
 public class AuthController {
 
     private final AuthService authService;
@@ -26,13 +26,13 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
-        return ResponseEntity.ok(response); // 200 OK con token y datos del usuario
+        return ResponseEntity.ok(response); /// 200 OK con token y datos del usuario
     }
 
     /// POST /auth/login - Valida credenciales y devuelve token JWT
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response); // 200 OK con token y datos del usuario
+        return ResponseEntity.ok(response); /// 200 OK con token y datos del usuario
     }
 }
