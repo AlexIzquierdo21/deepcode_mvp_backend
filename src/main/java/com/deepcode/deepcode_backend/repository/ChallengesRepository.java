@@ -20,4 +20,8 @@ public interface ChallengesRepository extends JpaRepository<ChallengesModel, Lon
 
     // Busca todos los retos creados por un usuario específico
     List<ChallengesModel> findByCreatedBy(UserModel createdBy);
+
+    List<ChallengesModel> id(Long id);
+
+    Long Id(Long id);
 }
