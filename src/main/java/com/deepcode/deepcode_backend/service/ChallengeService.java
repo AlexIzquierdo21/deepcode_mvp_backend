@@ -61,9 +61,12 @@ public class ChallengeService {
         if (challengesOptional.isEmpty()) {
             throw new RuntimeException("Reto no encontrado");
         }
-
         /// Devuelve el reto encontrado
         return challengesOptional.get();
+    }
+    public void deleteChallenge(Long id) {
+        getChallengeById(id);
+        challengesRepository.deleteById(id);
     }
 }
 

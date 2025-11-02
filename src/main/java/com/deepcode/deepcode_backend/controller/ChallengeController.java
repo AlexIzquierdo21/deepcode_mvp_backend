@@ -46,4 +46,28 @@ public class ChallengeController {
         ChallengesModel challenge = challengeService.getChallengeById(id);
         return ResponseEntity.ok(challenge); /// 200 OK con el reto encontrado
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteChallenge(@PathVariable Long id) {
+        challengeService.deleteChallenge(id);
+
+        return ResponseEntity.noContent().build();
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
