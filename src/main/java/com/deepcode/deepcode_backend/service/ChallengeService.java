@@ -2,6 +2,8 @@ package com.deepcode.deepcode_backend.service;
 
 import com.deepcode.deepcode_backend.dto.challenge.CreateChallengeRequest;
 import com.deepcode.deepcode_backend.entity.ChallengesModel;
+import com.deepcode.deepcode_backend.entity.LanguageChallenge;
+import com.deepcode.deepcode_backend.entity.LevelChallenge;
 import com.deepcode.deepcode_backend.entity.UserModel;
 import com.deepcode.deepcode_backend.repository.ChallengesRepository;
 import org.springframework.stereotype.Service;
@@ -47,9 +49,21 @@ public class ChallengeService {
         return challengesRepository.save(challenge);
     }
 
-    /// Obtiene todos los retos de la base de datos
-    public List<ChallengesModel> getAllChallenges() {
-        return challengesRepository.findAll();
+    /// Obtiene todos los retos con filtros opcionales por lenguaje y nivel
+    public List<ChallengesModel> getAllChallenges(LanguageChallenge language, LevelChallenge level) {
+        /// Sin filtros: devuelve todos los retos
+        if (language == null && level == null) {
+            return challengesRepository.findAll();
+            /// Filtro solo por lenguaje
+        } else if (language != null && level == null) {
+            return challengesRepository.findByLanguage(language);
+            /// Filtro solo por nivel
+        } else if (language == null && level != null) {
+            return challengesRepository.findByLevel(level);
+            /// Filtro por ambos: lenguaje y nivel
+        } else {
+            return challengesRepository.findByLanguageAndLevel(language, level);
+        }
     }
 
     /// Busca un reto específico por ID

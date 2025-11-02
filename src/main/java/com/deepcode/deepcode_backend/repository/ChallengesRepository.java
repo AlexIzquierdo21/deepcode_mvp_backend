@@ -8,18 +8,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-// Repository para gestionar retos de programación
-// Extiende JpaRepository para obtener métodos CRUD automáticos (save, findAll, findById, delete, etc.)
+/// Repository para gestionar retos de programación
+/// Extiende JpaRepository para obtener métodos CRUD automáticos (save, findAll, findById, delete, etc.)
 public interface ChallengesRepository extends JpaRepository<ChallengesModel, Long> {
 
-    // Busca todos los retos de un lenguaje específico (PYTHON, JAVA, KOTLIN, HTML_CSS_JS)
+    /// Busca todos los retos de un lenguaje específico (PYTHON, JAVA, KOTLIN, HTML_CSS_JS)
     List<ChallengesModel> findByLanguage(LanguageChallenge language);
 
-    // Busca todos los retos de un nivel específico (BEGINNER, INTERMEDIATE)
+    /// Busca todos los retos de un nivel específico (BEGINNER, INTERMEDIATE)
     List<ChallengesModel> findByLevel(LevelChallenge level);
 
-    // Busca todos los retos creados por un usuario específico
+    /// Busca todos los retos creados por un usuario específico
     List<ChallengesModel> findByCreatedBy(UserModel createdBy);
+
+    /// Busca los retos por lenguaje y por nivel.
+    List<ChallengesModel> findByLanguageAndLevel(LanguageChallenge language, LevelChallenge level);
 
     List<ChallengesModel> id(Long id);
 
