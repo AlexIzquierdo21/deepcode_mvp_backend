@@ -24,6 +24,7 @@ public class ChallengeController {
     }
 
     /// POST /challenges - Crea un nuevo reto (requiere JWT)
+    /// @param createChallengeRequest recibe el JSON del Front End
     @PostMapping
     public ResponseEntity<ChallengesModel> createChallenge(@RequestBody CreateChallengeRequest createChallengeRequest) {
         /// Obtiene el email del usuario autenticado desde el contexto de seguridad

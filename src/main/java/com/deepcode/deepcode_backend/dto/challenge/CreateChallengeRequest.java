@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+
+
 /// DTO para recibir datos al crear un nuevo reto de programación
 /// Genera getters, setters, toString, equals y hashCode automáticamente
 @Data

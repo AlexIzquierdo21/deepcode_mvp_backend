@@ -49,7 +49,6 @@ public class AuthService {
         if (!encoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Credenciales inválidas");
         }
-
         /// Generar token JWT
         String token = jwtUtil.generateToken(user.getEmail());
         /// Devolver AuthResponse
