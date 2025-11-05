@@ -17,7 +17,7 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Lo
     List<UserChallenge> findByChallengeId(ChallengesModel challengeId);
 
     /// Busca la relación específica entre un usuario y un reto (para verificar si existe)
-    Optional<UserChallenge> findByUserIdAndChallengeId(UserModel userId, ChallengesModel challengeId);
+    Optional<UserChallenge> findByUserIdAndChallengeId(UserModel user, ChallengesModel challengeId);
 
     /// Busca todos los retos de un usuario (completados y pendientes)
     List<UserChallenge> findByUserId(UserModel userId);
