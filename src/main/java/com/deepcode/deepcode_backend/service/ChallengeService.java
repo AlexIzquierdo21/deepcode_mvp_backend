@@ -78,8 +78,14 @@ public class ChallengeService {
         /// Devuelve el reto encontrado
         return challengesOptional.get();
     }
-    public void deleteChallenge(Long id) {
-        getChallengeById(id);
+    public void deleteChallenge(Long id, String email) {
+        ///  Obtener el reto (guárdalo en variable)
+        ChallengesModel challengesModel = getChallengeById(id);
+        /// Verificar si el usuario autenticado es el creador
+        if(!challengesModel.getCreatedBy().getEmail().equals(email)) {
+            throw new RuntimeException("No puedes eliminar el reto");
+        }
+        /// Si llegó aquí, es el creador → eliminar
         challengesRepository.deleteById(id);
     }
 }

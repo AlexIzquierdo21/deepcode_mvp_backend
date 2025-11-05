@@ -29,7 +29,8 @@ public class ProgressController {
         /// Obtiene el email del usuario autenticado desde el contexto de seguridad
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         /// Marca el reto como completado, actualizando o creando la relación UserChallenge
-        UserChallenge userChallenge = userChallengeService.markAsCompleted(request.getChallengeId(), email, request.getNotes());
+        UserChallenge userChallenge = userChallengeService.markAsCompleted
+                (request.getChallengeId(), email, request.getNotes());
         return ResponseEntity.ok(userChallenge); /// 200 OK con el progreso actualizado
     }
 
