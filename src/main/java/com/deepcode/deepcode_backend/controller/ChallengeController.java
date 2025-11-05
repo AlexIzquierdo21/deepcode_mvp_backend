@@ -26,11 +26,13 @@ public class ChallengeController {
     /// POST /challenges - Crea un nuevo reto (requiere JWT)
     /// @param createChallengeRequest recibe el JSON del Front End
     @PostMapping
-    public ResponseEntity<ChallengesModel> createChallenge(@RequestBody CreateChallengeRequest createChallengeRequest) {
+    public ResponseEntity<ChallengesModel> createChallenge
+            (@RequestBody CreateChallengeRequest createChallengeRequest) {
         /// Obtiene el email del usuario autenticado desde el contexto de seguridad
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         /// Crea el reto asociándolo al usuario autenticado
-        ChallengesModel challenge = challengeService.createChallenge(createChallengeRequest, email);
+        ChallengesModel challenge = challengeService.createChallenge
+                (createChallengeRequest, email);
         return ResponseEntity.ok(challenge); /// 200 OK con el reto creado
     }
 
