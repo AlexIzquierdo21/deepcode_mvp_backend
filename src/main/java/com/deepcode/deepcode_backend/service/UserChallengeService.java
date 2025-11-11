@@ -20,7 +20,8 @@ public class UserChallengeService {
     private final ChallengeService challengeService;
 
     /// Constructor para inyectar dependencias
-    public UserChallengeService(UserChallengeRepository userChallengeRepository, UserService userService, ChallengeService challengeService) {
+    public UserChallengeService(UserChallengeRepository userChallengeRepository, UserService userService,
+                                ChallengeService challengeService) {
         this.userChallengeRepository = userChallengeRepository;
         this.userService = userService;
         this.challengeService = challengeService;
@@ -41,13 +42,14 @@ public class UserChallengeService {
         ChallengesModel challenge = challengeService.getChallengeById(challengeId);
 
         /// Verifica si ya existe una relación UserChallenge para este usuario y reto
-        Optional<UserChallenge> userChallengeOptional = userChallengeRepository.findByUserIdAndChallengeId(user, challenge);
+        Optional<UserChallenge> userChallengeOptional =
+                userChallengeRepository.findByUserIdAndChallengeId(user, challenge);
 
         /// Caso A: Ya completado previamente
         if (userChallengeOptional.isPresent() && userChallengeOptional.get().getStatus() == StatusChallenge.COMPLETED) {
             throw new RuntimeException("Ya completaste este reto");
 
-            /// Caso B: Existe pero está PENDING, actualizar a COMPLETED
+        /// Caso B: Existe pero está PENDING, actualizar a COMPLETED
         } else if (userChallengeOptional.isPresent()) {
             UserChallenge existing = userChallengeOptional.get();
             existing.setStatus(StatusChallenge.COMPLETED);
@@ -55,7 +57,7 @@ public class UserChallengeService {
             existing.setNotes(notes);
             return userChallengeRepository.save(existing);
 
-            /// Caso C: No existe relación, crear nueva con status COMPLETED
+        /// Caso C: No existe relación, crear nueva con status COMPLETED
         } else {
             UserChallenge newUserChallenge = new UserChallenge();
             newUserChallenge.setUserId(user);
