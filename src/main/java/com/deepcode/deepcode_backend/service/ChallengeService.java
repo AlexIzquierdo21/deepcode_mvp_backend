@@ -88,6 +88,19 @@ public class ChallengeService {
         /// Si llegó aquí, es el creador → eliminar
         challengesRepository.deleteById(id);
     }
+    /// Obtiene todos los retos creados por el usuario autenticado
+    public List<ChallengesModel> getMyCreatedChallenges(String email) {
+        // Buscar usuario por email (del JWT)
+        Optional<UserModel> userOptional = userService.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+        UserModel user = userOptional.get();
+
+        // Buscar y devolver retos creados por este usuario
+        return challengesRepository.findByCreatedBy(user);
+    }
 }
 
 

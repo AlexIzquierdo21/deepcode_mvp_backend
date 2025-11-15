@@ -54,6 +54,7 @@ public class ChallengeController {
         ChallengesModel challenge = challengeService.getChallengeById(id);
         return ResponseEntity.ok(challenge); /// 200 OK con el reto encontrado
     }
+
     /// DELETE /challenges/{id} - Elimina un reto por ID (requiere JWT)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteChallenge(@PathVariable Long id) {
@@ -61,6 +62,16 @@ public class ChallengeController {
         /// Elimina el reto de la base de datos
         challengeService.deleteChallenge(id, email);
         return ResponseEntity.noContent().build(); /// 204 No Content (eliminado exitosamente)
+    }
+
+    /// GET /challenges/my-challenges - Obtiene retos creados por el usuario autenticado
+    @GetMapping("/my-challenges")
+    public ResponseEntity<List<ChallengesModel>> getMyCreatedChallenges() {
+        /// Obtiene el email del usuario autenticado desde el contexto de seguridad
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        /// Obtiene retos creados por este usuario
+        List<ChallengesModel> myChallenges = challengeService.getMyCreatedChallenges(email);
+        return ResponseEntity.ok(myChallenges);
     }
 }
 
