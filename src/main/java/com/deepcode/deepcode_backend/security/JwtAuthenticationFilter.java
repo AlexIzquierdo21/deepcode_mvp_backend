@@ -63,10 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserModel userModel = userModelOptional.get();
 
             /// Valida el token (verifica firma y expiración)
-            if (!jwtUtil.validateToken(token, email)) {
+            boolean isValid = jwtUtil.validateToken(token, email);
+
+            if (!isValid) {
                 filterChain.doFilter(request, response);
                 return;
             }
+
 
             /// Crea el objeto de autenticación de Spring Security
             UsernamePasswordAuthenticationToken authToken =
@@ -80,6 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
+            e.printStackTrace();
             /// Si hay algún error (token inválido, expirado, etc.), continúa sin autenticar
             filterChain.doFilter(request, response);
             return;

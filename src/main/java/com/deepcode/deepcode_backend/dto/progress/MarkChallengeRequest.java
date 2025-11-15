@@ -14,6 +14,5 @@ public class MarkChallengeRequest {
 
     @NotNull(message = "El ID debe ser obligatorio")
     private Long challengeId;
-
     private String notes;
 }
