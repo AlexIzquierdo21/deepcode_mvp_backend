@@ -8,6 +8,7 @@ import com.deepcode.deepcode_backend.entity.UserModel;
 import com.deepcode.deepcode_backend.repository.ChallengesRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,8 +26,9 @@ public class ChallengeService {
     }
 
     /// Crea un nuevo reto asociado al usuario autenticado
+    /// Valida que no exista un reto duplicado (mismo título, lenguaje y nivel)
     public ChallengesModel createChallenge(CreateChallengeRequest createChallengeRequest, String email) {
-        // Busca el usuario por email (obtenido del JWT)
+        /// Busca el usuario por email (obtenido del JWT)
         Optional<UserModel> userOptional = userService.findByEmail(email);
 
         /// Verifica que el usuario existe en la BD
@@ -34,6 +36,18 @@ public class ChallengeService {
             throw new RuntimeException("Usuario no encontrado.");
         }
         UserModel user = userOptional.get();
+
+        /// Validar que no exista un reto duplicado con mismo título + lenguaje + nivel
+        /// Esto permite crear "Hello World" en Python y Java, pero no dos "Hello World" en Python BEGINNER
+        boolean exists = challengesRepository.existsByTitleAndLanguageAndLevel(
+                createChallengeRequest.getTitle(),
+                createChallengeRequest.getLanguage(),
+                createChallengeRequest.getLevel()
+        );
+
+        if (exists) {
+            throw new RuntimeException("Ya existe un reto con ese título, lenguaje y nivel");
+        }
 
         /// Crea una nueva instancia de ChallengesModel
         ChallengesModel challenge = new ChallengesModel();
@@ -44,8 +58,10 @@ public class ChallengeService {
         challenge.setLanguage(createChallengeRequest.getLanguage());
         challenge.setLevel(createChallengeRequest.getLevel());
         challenge.setCreatedBy(user); // Asocia el reto al usuario autenticado
+        challenge.setCreatedAt(LocalDateTime.now()); // Establece fecha de creación
 
-        /// Guarda en la BD y devuelve el reto creado (con id y createdAt generados)
+
+        /// Guarda en la BD y devuelve el reto creado (con id generado)
         return challengesRepository.save(challenge);
     }
 
@@ -78,19 +94,24 @@ public class ChallengeService {
         /// Devuelve el reto encontrado
         return challengesOptional.get();
     }
+
+    /// Elimina un reto solo si el usuario autenticado es el creador
     public void deleteChallenge(Long id, String email) {
-        ///  Obtener el reto (guárdalo en variable)
+        /// Obtener el reto por ID (lanza excepción si no existe)
         ChallengesModel challengesModel = getChallengeById(id);
+
         /// Verificar si el usuario autenticado es el creador
-        if(!challengesModel.getCreatedBy().getEmail().equals(email)) {
+        if (!challengesModel.getCreatedBy().getEmail().equals(email)) {
             throw new RuntimeException("No puedes eliminar el reto");
         }
+
         /// Si llegó aquí, es el creador → eliminar
         challengesRepository.deleteById(id);
     }
+
     /// Obtiene todos los retos creados por el usuario autenticado
     public List<ChallengesModel> getMyCreatedChallenges(String email) {
-        // Buscar usuario por email (del JWT)
+        /// Buscar usuario por email (del JWT)
         Optional<UserModel> userOptional = userService.findByEmail(email);
 
         if (userOptional.isEmpty()) {
@@ -98,11 +119,10 @@ public class ChallengeService {
         }
         UserModel user = userOptional.get();
 
-        // Buscar y devolver retos creados por este usuario
+        /// Buscar y devolver retos creados por este usuario
         return challengesRepository.findByCreatedBy(user);
     }
 }
-
 
 
 
