@@ -2,53 +2,36 @@
 
 ## Arquitectura General
 
-**DeepCode Backend** es una API REST desarrollada con **Spring Boot** siguiendo el patrón de **arquitectura en capas** (Layered Architecture). La estructura está organizada para separar responsabilidades: configuración, controladores, DTOs, entidades, repositorios, seguridad y servicios.
+**DeepCode Backend** es una API REST desarrollada con **Spring Boot** siguiendo el patrón de **arquitectura en capas** (Layered Architecture). La estructura está organizada para separar responsabilidades: controladores (endpoints), servicios (lógica de negocio), repositorios (acceso a datos) y entidades (modelos de base de datos).
 
 ---
 
 ## Estructura de Carpetas Principal
 ```
 com.deepcode.deepcode_backend/
-├── config/            → Configuración de Spring (Seguridad)
 ├── controller/        → Endpoints REST (API)
-├── dto/               → Data Transfer Objects (requests/responses)
-├── entity/            → Entidades JPA (modelos de BD)
-├── repository/        → Interfaces JPA para acceso a BD
-├── security/          → Autenticación JWT y filtros
 ├── service/           → Lógica de negocio
+├── repository/        → Interfaces JPA para acceso a BD
+├── entity/            → Entidades JPA (modelos de BD)
+├── dto/               → Data Transfer Objects (requests/responses)
+├── security/          → Autenticación JWT y filtros
+├── config/            → Configuración de Spring (Seguridad)
 └── DeepCodeBackendApplication.java → Clase principal
 ```
 
 ---
 
-## CAPA CONFIG (`config/`)
-
-**Responsabilidad:** Configuración de Spring Security y otros componentes del framework.
-
-| Archivo | Descripción |
-|---------|-------------|
-| `SecurityConfig.java` | Configuración de Spring Security (rutas públicas/protegidas, filtros JWT, CORS, CSRF) |
-
-**Funcionalidades:**
-- Define rutas públicas: `/auth/**`
-- Define rutas protegidas: todo lo demás (requiere JWT)
-- Configura `BCryptPasswordEncoder` para encriptar contraseñas
-- Añade `JwtAuthenticationFilter` a la cadena de filtros
-- Desactiva CSRF (API REST stateless)
-
----
-
 ## CAPA CONTROLLER (`controller/`)
 
-**Responsabilidad:** Expone endpoints REST y maneja peticiones HTTP.
+**Responsabilidad:** Expone endpoints REST y maneja peticiones HTTP. Es la puerta de entrada de la API.
 
 | Archivo | Descripción |
 |---------|-------------|
 | `AuthController.java` | Endpoints de autenticación (POST /auth/register, POST /auth/login) |
+| `UserController.java` | Endpoints de información del usuario (GET /users/me) |
 | `ChallengeController.java` | Endpoints de gestión de retos (GET, POST, DELETE /challenges) |
 | `ProgressController.java` | Endpoints de progreso del usuario (POST /progress, GET /progress/me) |
 | `TestController.java` | Endpoints de prueba (opcional, para testing) |
-| `UserController.java` | Endpoints de información del usuario (GET /users/me) |
 
 ### **Endpoints implementados:**
 
@@ -70,133 +53,17 @@ com.deepcode.deepcode_backend/
 - `POST /progress` - Marcar reto como completado (requiere JWT)
 - `GET /progress/me` - Obtener progreso completo del usuario autenticado
 
----
-
-## CAPA DTO (`dto/`)
-
-**Responsabilidad:** Objetos de transferencia de datos entre frontend y backend (no se persisten en BD).
-
-### dto/auth/
-DTOs relacionados con autenticación.
-
-| Archivo | Descripción |
-|---------|-------------|
-| `AuthResponse.java` | Respuesta de login/register (contiene: token JWT, username, email) |
-| `LoginRequest.java` | Request de login (contiene: email, password) |
-| `RegisterRequest.java` | Request de registro (contiene: username, email, password) |
-
----
-
-### dto/challenge/
-DTOs relacionados con retos.
-
-| Archivo | Descripción |
-|---------|-------------|
-| `CreateChallengeRequest.java` | Request para crear reto (contiene: title, description, language, level) |
-
----
-
-### dto/progress/
-DTOs relacionados con progreso del usuario.
-
-| Archivo | Descripción |
-|---------|-------------|
-| `MarkChallengeRequest.java` | Request para marcar reto como completado (contiene: challengeId, notes opcionales) |
-
----
-
-##  CAPA ENTITY (`entity/`)
-
-**Responsabilidad:** Entidades JPA que representan las tablas de la base de datos MySQL.
-
-| Archivo | Descripción | Tabla BD |
-|---------|-------------|----------|
-| `UserModel.java` | Usuario de la plataforma | `users` |
-| `ChallengesModel.java` | Reto de programación | `challenges` |
-| `UserChallenge.java` | Relación usuario-reto (progreso) | `user_challenges` |
-| `LanguageChallenge.java` | Enum de lenguajes (PYTHON, JAVA, KOTLIN, HTML_CSS_JS) | - |
-| `LevelChallenge.java` | Enum de niveles (BEGINNER, INTERMEDIATE) | - |
-| `StatusChallenge.java` | Enum de estados (PENDING, COMPLETED) | - |
-
-### **Relaciones entre entidades:**
-
-**UserModel (1) ↔ (N) ChallengesModel**
-- Un usuario puede crear muchos retos
-- Relación `@OneToMany` en UserModel
-- Relación `@ManyToOne` en ChallengesModel (campo `createdBy`)
-
-**UserModel (1) ↔ (N) UserChallenge**
-- Un usuario puede tener progreso en muchos retos
-- Relación `@OneToMany` en UserModel
-
-**ChallengesModel (1) ↔ (N) UserChallenge**
-- Un reto puede ser intentado por muchos usuarios
-- Relación `@OneToMany` en ChallengesModel
-
-**UserChallenge** es la tabla intermedia que relaciona `users` con `challenges` y almacena:
-- `status` (PENDING, COMPLETED)
-- `notes` (notas del usuario sobre el reto)
-- `completedAt` (fecha de completado)
-
----
-
-## CAPA REPOSITORY (`repository/`)
-
-**Responsabilidad:** Interfaces JPA que Spring Data implementa automáticamente para acceso a BD.
-
-| Archivo | Descripción |
-|---------|-------------|
-| `UserRepository.java` | Acceso a datos de usuarios (métodos: findByEmail, existsByEmail) |
-| `ChallengesRepository.java` | Acceso a datos de retos (métodos: findByLanguage, findByLevel, findByCreatedBy) |
-| `UserChallengeRepository.java` | Acceso a datos de progreso (métodos: findByUserId, findByUserIdAndChallengeId) |
-
-**Métodos personalizados implementados:**
-- `Optional<UserModel> findByEmail(String email)`
-- `boolean existsByEmail(String email)`
-- `List<ChallengesModel> findByLanguage(LanguageChallenge language)`
-- `List<ChallengesModel> findByLevel(LevelChallenge level)`
-- `List<ChallengesModel> findByCreatedBy(UserModel createdBy)`
-- `List<UserChallenge> findByUserId(UserModel userId)`
-- `Optional<UserChallenge> findByUserIdAndChallengeId(UserModel userId, ChallengesModel challengeId)`
-
----
-
-## CAPA SECURITY (`security/`)
-
-**Responsabilidad:** Maneja la autenticación JWT y seguridad de la aplicación.
-
-| Archivo | Descripción |
-|---------|-------------|
-| `JwtAuthenticationFilter.java` | Filtro que intercepta peticiones HTTP, valida JWT y autentica usuarios |
-| `JwtUtil.java` | Utilidades para generar, validar y extraer información de tokens JWT |
-
-### **JwtAuthenticationFilter.java**
-**Flujo de ejecución:**
-1. Intercepta todas las peticiones HTTP
-2. Extrae el header `Authorization`
-3. Si no hay header o no empieza con "Bearer " → continúa sin autenticar
-4. Extrae el token JWT (quita "Bearer ")
-5. Valida el token con `JwtUtil`
-6. Busca el usuario en BD por email
-7. Si todo es válido → crea `UsernamePasswordAuthenticationToken`
-8. Setea el usuario autenticado en `SecurityContextHolder`
-9. Continúa con la cadena de filtros
-
-### **JwtUtil.java**
-**Métodos principales:**
-- `generateToken(String email)` - Genera JWT firmado con secret key (válido 10 horas)
-- `extractEmail(String token)` - Extrae el email (subject) del token
-- `validateToken(String token, String email)` - Verifica firma y expiración
-
-**Configuración:**
-- Secret key: definida en `application.properties` (`jwt.secret`)
-- Tiempo de expiración: 10 horas (`jwt.expiration`)
+**Patrón de trabajo:**
+- Los controllers **reciben** peticiones HTTP
+- **Validan** datos con `@Valid`
+- **Delegan** la lógica de negocio a los Services
+- **Devuelven** respuestas HTTP con `ResponseEntity`
 
 ---
 
 ## CAPA SERVICE (`service/`)
 
-**Responsabilidad:** Contiene la lógica de negocio de la aplicación.
+**Responsabilidad:** Contiene la lógica de negocio de la aplicación. Es el cerebro del sistema.
 
 | Archivo | Descripción |
 |---------|-------------|
@@ -254,6 +121,169 @@ DTOs relacionados con progreso del usuario.
     - **Si no existe** → Crea nueva relación con status COMPLETED
 4. Guarda en BD y devuelve el UserChallenge actualizado
 
+**Patrón de trabajo:**
+- Los services **reciben** datos de los controllers
+- **Ejecutan** la lógica de negocio (validaciones, cálculos, decisiones)
+- **Llaman** a los repositories para acceder a BD
+- **Devuelven** resultados a los controllers
+
+---
+
+## CAPA REPOSITORY (`repository/`)
+
+**Responsabilidad:** Interfaces JPA que Spring Data implementa automáticamente para acceso a BD. Son la puerta de entrada a la base de datos.
+
+| Archivo | Descripción |
+|---------|-------------|
+| `UserRepository.java` | Acceso a datos de usuarios (métodos: findByEmail, existsByEmail) |
+| `ChallengesRepository.java` | Acceso a datos de retos (métodos: findByLanguage, findByLevel, findByCreatedBy) |
+| `UserChallengeRepository.java` | Acceso a datos de progreso (métodos: findByUserId, findByUserIdAndChallengeId) |
+
+**Métodos personalizados implementados:**
+- `Optional<UserModel> findByEmail(String email)`
+- `boolean existsByEmail(String email)`
+- `List<ChallengesModel> findByLanguage(LanguageChallenge language)`
+- `List<ChallengesModel> findByLevel(LevelChallenge level)`
+- `List<ChallengesModel> findByCreatedBy(UserModel createdBy)`
+- `List<UserChallenge> findByUserId(UserModel userId)`
+- `Optional<UserChallenge> findByUserIdAndChallengeId(UserModel userId, ChallengesModel challengeId)`
+
+**Patrón de trabajo:**
+- Los repositories **extienden** `JpaRepository<Entity, ID>`
+- Spring Data JPA **genera automáticamente** la implementación
+- **Solo** operaciones de acceso a datos (CRUD básico + queries personalizadas)
+- **No contienen** lógica de negocio
+
+---
+
+## 🗄️ CAPA ENTITY (`entity/`)
+
+**Responsabilidad:** Entidades JPA que representan las tablas de la base de datos MySQL. Son el modelo de datos.
+
+| Archivo | Descripción | Tabla BD |
+|---------|-------------|----------|
+| `UserModel.java` | Usuario de la plataforma | `users` |
+| `ChallengesModel.java` | Reto de programación | `challenges` |
+| `UserChallenge.java` | Relación usuario-reto (progreso) | `user_challenges` |
+| `LanguageChallenge.java` | Enum de lenguajes (PYTHON, JAVA, KOTLIN, HTML_CSS_JS) | - |
+| `LevelChallenge.java` | Enum de niveles (BEGINNER, INTERMEDIATE) | - |
+| `StatusChallenge.java` | Enum de estados (PENDING, COMPLETED) | - |
+
+### **Relaciones entre entidades:**
+
+**UserModel (1) ↔ (N) ChallengesModel**
+- Un usuario puede crear muchos retos
+- Relación `@OneToMany` en UserModel
+- Relación `@ManyToOne` en ChallengesModel (campo `createdBy`)
+
+**UserModel (1) ↔ (N) UserChallenge**
+- Un usuario puede tener progreso en muchos retos
+- Relación `@OneToMany` en UserModel
+
+**ChallengesModel (1) ↔ (N) UserChallenge**
+- Un reto puede ser intentado por muchos usuarios
+- Relación `@OneToMany` en ChallengesModel
+
+**UserChallenge** es la tabla intermedia que relaciona `users` con `challenges` y almacena:
+- `status` (PENDING, COMPLETED)
+- `notes` (notas del usuario sobre el reto)
+- `completedAt` (fecha de completado)
+
+**Patrón de trabajo:**
+- Las entities **representan** tablas de BD
+- Usan anotaciones JPA: `@Entity`, `@Table`, `@Id`, `@Column`
+- Definen **relaciones** entre tablas: `@OneToMany`, `@ManyToOne`
+- **No contienen** lógica de negocio (solo getters/setters)
+
+---
+
+## CAPA DTO (`dto/`)
+
+**Responsabilidad:** Objetos de transferencia de datos entre frontend y backend (no se persisten en BD).
+
+### dto/auth/
+DTOs relacionados con autenticación.
+
+| Archivo | Descripción |
+|---------|-------------|
+| `AuthResponse.java` | Respuesta de login/register (contiene: token JWT, username, email) |
+| `LoginRequest.java` | Request de login (contiene: email, password) |
+| `RegisterRequest.java` | Request de registro (contiene: username, email, password) |
+
+---
+
+### dto/challenge/
+DTOs relacionados con retos.
+
+| Archivo | Descripción |
+|---------|-------------|
+| `CreateChallengeRequest.java` | Request para crear reto (contiene: title, description, language, level) |
+
+---
+
+### dto/progress/
+DTOs relacionados con progreso del usuario.
+
+| Archivo | Descripción |
+|---------|-------------|
+| `MarkChallengeRequest.java` | Request para marcar reto como completado (contiene: challengeId, notes opcionales) |
+
+**Patrón de trabajo:**
+- Los DTOs **encapsulan** datos de entrada/salida
+- Usan validaciones: `@NotNull`, `@NotBlank`, `@Email`
+- **Separan** el contrato de la API de las entidades de BD
+- **Protegen** el modelo de datos interno
+
+---
+
+## CAPA SECURITY (`security/`)
+
+**Responsabilidad:** Maneja la autenticación JWT y seguridad de la aplicación.
+
+| Archivo | Descripción |
+|---------|-------------|
+| `JwtAuthenticationFilter.java` | Filtro que intercepta peticiones HTTP, valida JWT y autentica usuarios |
+| `JwtUtil.java` | Utilidades para generar, validar y extraer información de tokens JWT |
+
+### **JwtAuthenticationFilter.java**
+**Flujo de ejecución:**
+1. Intercepta todas las peticiones HTTP
+2. Extrae el header `Authorization`
+3. Si no hay header o no empieza con "Bearer " → continúa sin autenticar
+4. Extrae el token JWT (quita "Bearer ")
+5. Valida el token con `JwtUtil`
+6. Busca el usuario en BD por email
+7. Si todo es válido → crea `UsernamePasswordAuthenticationToken`
+8. Setea el usuario autenticado en `SecurityContextHolder`
+9. Continúa con la cadena de filtros
+
+### **JwtUtil.java**
+**Métodos principales:**
+- `generateToken(String email)` - Genera JWT firmado con secret key (válido 10 horas)
+- `extractEmail(String token)` - Extrae el email (subject) del token
+- `validateToken(String token, String email)` - Verifica firma y expiración
+
+**Configuración:**
+- Secret key: definida en `application.properties` (`jwt.secret`)
+- Tiempo de expiración: 10 horas (`jwt.expiration`)
+
+---
+
+## 🔧 CAPA CONFIG (`config/`)
+
+**Responsabilidad:** Configuración de Spring Security y otros componentes del framework.
+
+| Archivo | Descripción |
+|---------|-------------|
+| `SecurityConfig.java` | Configuración de Spring Security (rutas públicas/protegidas, filtros JWT, CORS, CSRF) |
+
+**Funcionalidades:**
+- Define rutas públicas: `/auth/**`
+- Define rutas protegidas: todo lo demás (requiere JWT)
+- Configura `BCryptPasswordEncoder` para encriptar contraseñas
+- Añade `JwtAuthenticationFilter` a la cadena de filtros
+- Desactiva CSRF (API REST stateless)
+
 ---
 
 ## CLASE PRINCIPAL
@@ -264,8 +294,8 @@ DTOs relacionados con progreso del usuario.
 
 ---
 
-## 🔗 FLUJO COMPLETO DE UNA PETICIÓN (Ejemplo: Marcar reto como completado)
-
+## FLUJO COMPLETO DE UNA PETICIÓN (Ejemplo: Marcar reto como completado)
+```
 1. Cliente Android envía:
    POST /progress
    Headers: Authorization: Bearer <JWT>
@@ -322,16 +352,16 @@ DTOs relacionados con progreso del usuario.
    ↓
 
 8. Cliente Android recibe respuesta exitosa
-
+```
 
 ---
 
-## BASE DE DATOS (MySQL)
+## 🗄️ BASE DE DATOS (MySQL)
 
 ### **Tablas:**
 
 #### **users**
-
+```sql
 CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL,
@@ -339,10 +369,10 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+```
 
 #### **challenges**
-
+```sql
 CREATE TABLE challenges (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(200) NOT NULL,
@@ -353,10 +383,10 @@ CREATE TABLE challenges (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by_id) REFERENCES users(id)
 );
-
+```
 
 #### **user_challenges**
-
+```sql
 CREATE TABLE user_challenges (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id_id BIGINT NOT NULL,
@@ -367,7 +397,51 @@ CREATE TABLE user_challenges (
     FOREIGN KEY (user_id_id) REFERENCES users(id),
     FOREIGN KEY (challenge_id_id) REFERENCES challenges(id)
 );
+```
 
+---
+
+## ARQUITECTURA EN CAPAS - Flujo de Datos
+```
+┌─────────────────────────────────────────────────────┐
+│   CAPA CONTROLLER (Presentation Layer)             │
+│   - Recibe peticiones HTTP                         │
+│   - Valida datos de entrada                        │
+│   - Devuelve respuestas HTTP                       │
+└─────────────────────┬───────────────────────────────┘
+                      │ Delega lógica
+                      ↓
+┌─────────────────────────────────────────────────────┐
+│   CAPA SERVICE (Business Logic Layer)              │
+│   - Lógica de negocio                              │
+│   - Validaciones complejas                         │
+│   - Orquestación de operaciones                    │
+└─────────────────────┬───────────────────────────────┘
+                      │ Accede a datos
+                      ↓
+┌─────────────────────────────────────────────────────┐
+│   CAPA REPOSITORY (Persistence Layer)              │
+│   - Acceso a base de datos                         │
+│   - CRUD básico                                     │
+│   - Queries personalizadas                         │
+└─────────────────────┬───────────────────────────────┘
+                      │ Mapea a/desde
+                      ↓
+┌─────────────────────────────────────────────────────┐
+│   CAPA ENTITY (Data Model)                         │
+│   - Representación de tablas                       │
+│   - Relaciones entre entidades                     │
+│   - Sin lógica de negocio                          │
+└─────────────────────┬───────────────────────────────┘
+                      │ Persiste en
+                      ↓
+┌─────────────────────────────────────────────────────┐
+│   BASE DE DATOS (MySQL)                            │
+│   - Almacenamiento persistente                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Regla de oro:** Cada capa solo puede comunicarse con la capa inmediatamente inferior.
 
 ---
 
@@ -420,10 +494,10 @@ CREATE TABLE user_challenges (
 ## ESTADÍSTICAS DEL PROYECTO
 
 - **Total de endpoints:** 12
-- **Total de entidades:** 3 (+ 3 enums)
-- **Total de repositorios:** 3
-- **Total de services:** 4
 - **Total de controllers:** 5
+- **Total de services:** 4
+- **Total de repositorios:** 3
+- **Total de entidades:** 3 (+ 3 enums)
 - **Total de DTOs:** 5
 - **Líneas de código:** ~2500+
 
@@ -450,7 +524,7 @@ CREATE TABLE user_challenges (
 
 ### **Arquitectura:**
 - Arquitectura en capas bien definida
-- Separación de responsabilidades (Controller → Service → Repository)
+- Separación clara de responsabilidades (Controller → Service → Repository → Entity)
 - DTOs para contratos API limpios
 - Entidades JPA con relaciones complejas
 
@@ -458,7 +532,7 @@ CREATE TABLE user_challenges (
 - JWT authentication stateless
 - Filtro personalizado para validar tokens
 - Contraseñas encriptadas con BCrypt
-- Autorización basada en roles (creador de reto)
+- Autorización basada en ownership (creador de reto)
 
 ### **API REST:**
 - Endpoints RESTful bien diseñados
@@ -467,25 +541,25 @@ CREATE TABLE user_challenges (
 - Manejo de errores con excepciones personalizadas
 
 ### **Base de datos:**
--  Relaciones complejas (OneToMany, ManyToOne)
--  Spring Data JPA para acceso simplificado
--  Métodos de consulta personalizados
--  Enums para valores constantes
+- Relaciones complejas (OneToMany, ManyToOne)
+- Spring Data JPA para acceso simplificado
+- Métodos de consulta personalizados
+- Enums para valores constantes
 
 ---
 
-## CONCLUSIÓN
+## 🎓 CONCLUSIÓN
 
 **DeepCode Backend** es una API REST profesional que demuestra:
 - Conocimientos sólidos de Spring Boot y arquitectura backend
 - Implementación correcta de autenticación JWT
 - Diseño de API RESTful siguiendo mejores prácticas
-- Manejo robusto de seguridad y validaciones
-- Código limpio y bien organizado en capas
+- Arquitectura en capas con separación clara de responsabilidades
+- Código limpio y bien organizado
 
 ---
 
-**Desarrollado por:** Alex Izquierdo Rottier
-**Fecha:** Marzo 2026  
+**Desarrollado por:** Alex  
+**Fecha:** Noviembre 2025  
 **Tecnología:** Spring Boot 3.x + MySQL  
-**Arquitectura:** Layered Architecture (MVC + Services)
+**Arquitectura:** Layered Architecture (Controller → Service → Repository → Entity)

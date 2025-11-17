@@ -1,5 +1,6 @@
 package com.deepcode.deepcode_backend.service;
 
+import com.deepcode.deepcode_backend.dto.progress.UserProgressResponse;
 import com.deepcode.deepcode_backend.entity.ChallengesModel;
 import com.deepcode.deepcode_backend.entity.StatusChallenge;
 import com.deepcode.deepcode_backend.entity.UserChallenge;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /// Servicio con lógica de negocio para gestionar el progreso de usuarios en retos
 @Service
@@ -49,7 +51,7 @@ public class UserChallengeService {
         if (userChallengeOptional.isPresent() && userChallengeOptional.get().getStatus() == StatusChallenge.COMPLETED) {
             throw new RuntimeException("Ya completaste este reto");
 
-        /// Caso B: Existe pero está PENDING, actualizar a COMPLETED
+            /// Caso B: Existe pero está PENDING, actualizar a COMPLETED
         } else if (userChallengeOptional.isPresent()) {
             UserChallenge existing = userChallengeOptional.get();
             existing.setStatus(StatusChallenge.COMPLETED);
@@ -57,7 +59,7 @@ public class UserChallengeService {
             existing.setNotes(notes);
             return userChallengeRepository.save(existing);
 
-        /// Caso C: No existe relación, crear nueva con status COMPLETED
+            /// Caso C: No existe relación, crear nueva con status COMPLETED
         } else {
             UserChallenge newUserChallenge = new UserChallenge();
             newUserChallenge.setUserId(user);
@@ -69,9 +71,10 @@ public class UserChallengeService {
         }
     }
 
-    /// Obtiene el progreso (retos completados y pendientes) del usuario autenticado
-    public List<UserChallenge> getUserProgress(String email) {
-        /// Busca el usuario por email
+    /// Obtiene el progreso completo del usuario autenticado en formato DTO
+    /// Devuelve solo la información relevante de cada reto sin repetir datos del usuario
+    public List<UserProgressResponse> getUserProgress(String email) {
+        /// Busca el usuario por email (obtenido del JWT)
         Optional<UserModel> userOptional = userService.findByEmail(email);
 
         /// Valida que el usuario existe
@@ -80,8 +83,23 @@ public class UserChallengeService {
         }
         UserModel user = userOptional.get();
 
-        /// Busca y devuelve todos los UserChallenge asociados a este usuario
-        return userChallengeRepository.findByUserId(user);
+        /// Busca todos los UserChallenge asociados a este usuario (completados y pendientes)
+        List<UserChallenge> userChallenges = userChallengeRepository.findByUserId(user);
+
+        /// Transforma la lista de entidades UserChallenge a DTOs UserProgressResponse
+        /// Esto elimina información redundante (usuario repetido en cada elemento)
+        /// y solo devuelve los datos relevantes del reto y su progreso
+        return userChallenges.stream()
+                .map(uc -> new UserProgressResponse(
+                        uc.getChallengeId().getId(),              // ID del reto
+                        uc.getChallengeId().getTitle(),           // Título del reto
+                        uc.getChallengeId().getLanguage(),        // Lenguaje de programación
+                        uc.getChallengeId().getLevel(),           // Nivel de dificultad
+                        uc.getStatus(),                           // Estado (COMPLETED/PENDING)
+                        uc.getNotes(),                            // Notas del usuario sobre el reto
+                        uc.getCompletedAt()                       // Fecha y hora de completado (null si PENDING)
+                ))
+                .collect(Collectors.toList());                // Convierte el Stream de vuelta a List
     }
 }
 

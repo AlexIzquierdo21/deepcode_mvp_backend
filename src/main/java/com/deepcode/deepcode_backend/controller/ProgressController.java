@@ -1,6 +1,7 @@
 package com.deepcode.deepcode_backend.controller;
 
 import com.deepcode.deepcode_backend.dto.progress.MarkChallengeRequest;
+import com.deepcode.deepcode_backend.dto.progress.UserProgressResponse;
 import com.deepcode.deepcode_backend.entity.UserChallenge;
 import com.deepcode.deepcode_backend.service.UserChallengeService;
 import org.springframework.http.ResponseEntity;
@@ -36,11 +37,11 @@ public class ProgressController {
 
     /// GET /progress/me - Obtiene el progreso completo del usuario autenticado (requiere JWT)
     @GetMapping("/me")
-    public ResponseEntity<List<UserChallenge>> getUserProgress() {
+    public ResponseEntity<List<UserProgressResponse>> getUserProgress() {
         /// Obtiene el email del usuario autenticado desde el contexto de seguridad
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         /// Obtiene todos los retos (completados y pendientes) del usuario
-        List<UserChallenge> progressList = userChallengeService.getUserProgress(email);
+        List<UserProgressResponse> progressList = userChallengeService.getUserProgress(email);
         return ResponseEntity.ok(progressList); /// 200 OK con la lista de progreso
     }
 }
