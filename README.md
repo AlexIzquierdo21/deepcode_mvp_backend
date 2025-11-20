@@ -13,15 +13,14 @@
 ## Tabla de Contenidos
 
 - [Características](#-características)
-- [Stack Tecnológico](#-stack-tecnológico)
-- [Arquitectura](#-arquitectura)
+- [Stack Tecnológico](#️-stack-tecnológico)
+- [Arquitectura](#️-arquitectura)
 - [Instalación Rápida con Docker](#-instalación-rápida-con-docker)
-- [Instalación Manual](#-instalación-manual)
+- [Probar la API con Postman](#-probar-la-api-con-postman)
 - [Endpoints de la API](#-endpoints-de-la-api)
 - [Datos de Prueba](#-datos-de-prueba)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Testing](#-testing)
-- [Roadmap](#-roadmap)
+- [Roadmap](#️-roadmap)
 - [Contacto](#-contacto)
 
 ---
@@ -39,14 +38,12 @@
 - Soporte para múltiples lenguajes: **Python, Java, Kotlin, HTML/CSS/JS**
 - Niveles de dificultad: **Beginner, Intermediate**
 - Filtros por lenguaje y nivel
-- Búsqueda de retos
 - Sistema de autoría (cada reto tiene un creador)
 
 ### **Sistema de Progreso**
 - Los usuarios pueden marcar retos como completados
 - Historial de progreso por usuario
 - Notas personales en cada reto completado
-- Estadísticas de progreso
 
 ### **Validaciones de Negocio**
 - No se permiten retos duplicados (mismo título + lenguaje + nivel)
@@ -55,7 +52,7 @@
 
 ---
 
-## Stack Tecnológico
+## 🛠Stack Tecnológico
 
 | Tecnología | Versión | Descripción |
 |------------|---------|-------------|
@@ -71,7 +68,7 @@
 
 ---
 
-## Arquitectura
+## 🏗Arquitectura
 ```
 ┌─────────────────┐
 │  Spring Boot    │
@@ -111,10 +108,10 @@
 - [Docker Compose](https://docs.docker.com/compose/install/) instalado
 
 ### **Pasos:**
-bash
+```bash
 # 1. Clonar el repositorio
-git clone https://github.com/AlexIzquierdo21/deepcode_mvp_backend
-cd deepcode-backend
+git clone https://github.com/AlexIzquierdo21/deepcode_mvp_backend.git
+cd deepcode_mvp_backend
 
 # 2. Construir y ejecutar con Docker Compose
 docker-compose up --build -d
@@ -125,9 +122,10 @@ docker-compose up --build -d
 docker-compose logs -f app
 
 # Deberías ver:
-# Seeders completados
-# DATOS CREADOS: 4 usuarios, 19 challenges
-# API lista en: http://localhost:8080
+# Iniciando seeders de datos de prueba...
+# Usuarios creados: 4
+# Challenges creados: 19
+# 🚀 API lista en: http://localhost:8080
 ```
 
 ### **Detener la aplicación:**
@@ -145,55 +143,135 @@ docker-compose down -v
 
 ---
 
-## Instalación Manual
+## Probar la API con Postman
 
-### **Requisitos:**
-- [Java 17+](https://www.oracle.com/java/technologies/downloads/)
-- [Maven 3.9+](https://maven.apache.org/download.cgi)
-- [MySQL 8.0+](https://dev.mysql.com/downloads/mysql/)
+### **Importar colección (¡Token automático incluido!)**
 
-### **Pasos:**
+La colección de Postman viene preconfigurada con **gestión automática del token JWT**. No necesitas copiar y pegar tokens manualmente.
 
-#### 1️**Clonar repositorio**
-```bash
-git clone https://github.com/tu-usuario/deepcode-backend.git
-cd deepcode-backend
+**Pasos:**
+
+1. **Abrir Postman**
+2. Click en **"Import"** (arriba a la izquierda)
+3. **Arrastrar o seleccionar** los archivos de la carpeta `postman/`:
+    - `DeepCode-API.postman_collection.json`
+    - `DeepCode-Local.postman_environment.json`
+4. Seleccionar el environment **"DeepCode Local"** (dropdown arriba a la derecha)
+5. **¡Listo para probar!**
+
+---
+
+### **Flujo de prueba automático:**
+
+#### **1️-Login (el token se guarda automáticamente)**
+```
+POST {{base_url}}/auth/login
 ```
 
-#### 2️**Crear base de datos**
-```sql
--- Conectarse a MySQL
-mysql -u root -p
-
--- Crear base de datos
-CREATE DATABASE deepcode_db;
+**Body ya incluido:**
+```json
+{
+  "email": "alex@test.com",
+  "password": "test123"
+}
 ```
 
-#### 3️**Configurar application.properties**
+**Magic:** Después del login, el token se guarda automáticamente en la variable `{{token}}` y se usa en todas las peticiones siguientes.
 
-Editar `src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/deepcode_db
-spring.datasource.username=root
-spring.datasource.password=TU_PASSWORD_MYSQL
-spring.jpa.hibernate.ddl-auto=update
-spring.profiles.active=dev
+---
+
+#### **2️-Ver todos los challenges (token ya incluido)**
+```
+GET {{base_url}}/challenges
 ```
 
-#### 4️**Compilar y ejecutar**
-```bash
-# Compilar proyecto
-./mvnw clean install
+**Sin hacer nada más**, el token se envía automáticamente en el header `Authorization`.
 
-# Ejecutar aplicación
-./mvnw spring-boot:run
+**Resultado:** 19 challenges con seeders
+
+---
+
+#### **3️-Filtrar challenges por lenguaje**
+```
+GET {{base_url}}/challenges?language=PYTHON
 ```
 
-#### 5️**Verificar**
+**Resultado:** 6 challenges de Python
 
-Abrir navegador en: http://localhost:8080
+---
 
-**Deberías ver mensaje:** `Whitelabel Error Page` (esperado, porque no hay ruta raíz definida)
+#### **4️-Crear un nuevo challenge**
+```
+POST {{base_url}}/challenges
+```
+
+**Body ya incluido:**
+```json
+{
+  "title": "Nuevo Reto de Ejemplo",
+  "description": "Este es un reto creado desde Postman",
+  "language": "PYTHON",
+  "level": "BEGINNER"
+}
+```
+
+**Resultado:** Challenge creado con tu usuario
+
+---
+
+#### **5️-Marcar challenge como completado**
+```
+POST {{base_url}}/progress
+```
+
+**Body ya incluido:**
+```json
+{
+  "challengeId": 1,
+  "notes": "Completado desde Postman"
+}
+```
+
+**Resultado:** Progreso registrado
+
+---
+
+#### **6️-Ver mi progreso**
+```
+GET {{base_url}}/progress
+```
+
+**Resultado:** Lista de challenges completados
+
+---
+
+### **Características automáticas de la colección:**
+
+✅ **Token automático:** Se extrae del login y se usa en todas las peticiones  
+✅ **Variables de entorno:** `{{base_url}}` y `{{token}}` preconfiguradas  
+✅ **Requests pre-llenados:** Todos los bodies de ejemplo ya están incluidos  
+✅ **Headers automáticos:** Authorization y Content-Type configurados  
+✅ **Scripts de test:** Validaciones automáticas en las respuestas
+
+---
+
+### **Cambiar de usuario:**
+
+Para probar con otro usuario, simplemente cambia el body en el endpoint de login:
+```json
+{
+  "email": "maria@test.com",
+  "password": "test123"
+}
+```
+
+**El nuevo token se guardará automáticamente.**
+
+---
+
+### **Documentación completa:**
+
+Ver [Postman README](./postman/README.md) para más detalles sobre endpoints y ejemplos.
 
 ---
 
@@ -205,205 +283,36 @@ Abrir navegador en: http://localhost:8080
 
 ### **Autenticación**
 
-#### **Registrar usuario**
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "username": "Juan Pérez",
-  "email": "juan@example.com",
-  "password": "password123"
-}
-```
-
-**Respuesta exitosa (200 OK):**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "email": "juan@example.com",
-  "username": "Juan Pérez"
-}
-```
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| POST | `/auth/register` | Registrar nuevo usuario | No |
+| POST | `/auth/login` | Iniciar sesión | No |
+| GET | `/auth/me` | Ver perfil del usuario autenticado | Sí |
 
 ---
 
-#### **Login**
-```http
-POST /auth/login
-Content-Type: application/json
+### **Challenges**
 
-{
-  "email": "juan@example.com",
-  "password": "password123"
-}
-```
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| GET | `/challenges` | Listar todos los challenges | Sí |
+| GET | `/challenges?language=PYTHON` | Filtrar por lenguaje | Sí |
+| GET | `/challenges?level=BEGINNER` | Filtrar por nivel | Sí |
+| GET | `/challenges/{id}` | Ver un challenge específico | Sí |
+| POST | `/challenges` | Crear nuevo challenge | Sí |
+| DELETE | `/challenges/{id}` | Eliminar challenge (solo creador) | Sí |
 
-**Respuesta exitosa (200 OK):**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "email": "juan@example.com",
-  "username": "Juan Pérez"
-}
-```
-
----
-
-#### **Obtener perfil del usuario autenticado**
-```http
-GET /auth/me
-Authorization: Bearer <tu-token>
-```
-
-**Respuesta exitosa (200 OK):**
-```json
-{
-  "id": 1,
-  "username": "Juan Pérez",
-  "email": "juan@example.com",
-  "createdAt": "2025-01-15T10:30:00"
-}
-```
-
----
-
-### **Challenges (Retos)**
-
-#### **Listar todos los retos**
-```http
-GET /challenges
-Authorization: Bearer <tu-token>
-```
-
-**Respuesta exitosa (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "title": "Hello World en Python",
-    "description": "Crea un programa que imprima 'Hello World'",
-    "language": "PYTHON",
-    "level": "BEGINNER",
-    "createdAt": "2025-01-15T10:00:00",
-    "createdBy": {
-      "id": 1,
-      "username": "Admin DeepCode"
-    }
-  }
-]
-```
-
----
-
-#### **Filtrar retos por lenguaje**
-```http
-GET /challenges?language=PYTHON
-Authorization: Bearer <tu-token>
-```
-
-**Lenguajes disponibles:** `PYTHON`, `JAVA`, `KOTLIN`, `HTML_CSS_JS`
-
----
-
-#### **Filtrar retos por nivel**
-```http
-GET /challenges?level=BEGINNER
-Authorization: Bearer <tu-token>
-```
-
+**Lenguajes disponibles:** `PYTHON`, `JAVA`, `KOTLIN`, `HTML_CSS_JS`  
 **Niveles disponibles:** `BEGINNER`, `INTERMEDIATE`
 
 ---
 
-#### **Filtrar por lenguaje Y nivel**
-```http
-GET /challenges?language=PYTHON&level=INTERMEDIATE
-Authorization: Bearer <tu-token>
-```
+### 📊 **Progreso**
 
----
-
-#### **Buscar retos por ID**
-```http
-GET /challenges/{id}
-Authorization: Bearer <tu-token>
-```
-
----
-
-#### **Crear nuevo reto**
-```http
-POST /challenges
-Authorization: Bearer <tu-token>
-Content-Type: application/json
-
-{
-  "title": "Calculadora básica",
-  "description": "Crea una calculadora con suma, resta, multiplicación y división",
-  "language": "PYTHON",
-  "level": "BEGINNER"
-}
-```
-
-**Validaciones:**
-- Título mínimo 3 caracteres
-- No puede existir reto con mismo título + lenguaje + nivel
-- Language y Level son obligatorios
-
----
-
-#### **Eliminar reto**
-```http
-DELETE /challenges/{id}
-Authorization: Bearer <tu-token>
-```
-
-**Nota:** Solo el creador del reto puede eliminarlo.
-
----
-
-### **Progreso de Usuario**
-
-#### **Ver mi progreso**
-```http
-GET /progress
-Authorization: Bearer <tu-token>
-```
-
-**Respuesta exitosa (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "challenge": {
-      "id": 1,
-      "title": "Hello World en Python",
-      "language": "PYTHON",
-      "level": "BEGINNER"
-    },
-    "completedAt": "2025-01-15T14:30:00",
-    "notes": "Muy fácil, completado en 5 minutos"
-  }
-]
-```
-
----
-
-#### **Marcar reto como completado**
-```http
-POST /progress
-Authorization: Bearer <tu-token>
-Content-Type: application/json
-
-{
-  "challengeId": 1,
-  "notes": "Completado sin problemas"
-}
-```
-
-**Validaciones:**
-- No se puede marcar el mismo reto como completado dos veces
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| GET | `/progress` | Ver mi progreso | Sí |
+| POST | `/progress` | Marcar challenge como completado | Sí |
 
 ---
 
@@ -420,135 +329,71 @@ La aplicación incluye **seeders automáticos** con datos de ejemplo:
 | User | `maria@test.com` | `test123` |
 | User | `carlos@test.com` | `test123` |
 
+---
+
 ### **Challenges incluidos:**
 
 | Lenguaje | Beginner | Intermediate | Total |
 |----------|----------|--------------|-------|
-| Python | 3 | 3 | 6 |
-| Java | 2 | 2 | 4 |
-| Kotlin | 2 | 2 | 4 |
-| HTML/CSS/JS | 2 | 3 | 5 |
-| **TOTAL** | **9** | **10** | **19** |
-
----
-
-## Testing con Postman
-
-### **1️-Importar colección Postman**
-
-Descargar archivo: [`DeepCode-API.postman_collection.json`](./postman/DeepCode-API.postman_collection.json)
-
-**Importar en Postman:**
-1. Abrir Postman
-2. Click en "Import"
-3. Seleccionar el archivo `.json`
-4. Listo
-
----
-
-### **2️-Flujo de prueba recomendado:**
-```
-1. POST /auth/login (con alex@test.com / test123)
-   → Copiar el token de la respuesta
-
-2. GET /challenges
-   → Ver todos los retos
-
-3. GET /challenges?language=PYTHON
-   → Filtrar por lenguaje
-
-4. POST /challenges
-   → Crear un nuevo reto
-
-5. POST /progress
-   → Marcar reto como completado
-
-6. GET /progress
-   → Ver tu progreso
-
-7. DELETE /challenges/{id}
-   → Eliminar tu reto creado
-```
+| 🐍 Python | 3 | 3 | 6 |
+| ☕ Java | 2 | 2 | 4 |
+| 🔷 Kotlin | 2 | 2 | 4 |
+| 🌐 HTML/CSS/JS | 2 | 3 | 5 |
+| **📊 TOTAL** | **9** | **10** | **19** |
 
 ---
 
 ## Estructura del Proyecto
 ```
-deepcode-backend/
+deepcode_mvp_backend/
+│
+├── postman/                            # Colección Postman
+│   ├── DeepCode-API.postman_collection.json
+│   ├── DeepCode-Local.postman_environment.json
+│   └── README.md
 │
 ├── src/main/java/com/deepcode/deepcode_backend/
 │   ├── config/
-│   │   ├── CorsConfig.java                 # Configuración CORS
-│   │   ├── DataSeeder.java                 # Seeders de datos de prueba
-│   │   └── SecurityConfig.java             # Configuración Spring Security
+│   │   ├── CorsConfig.java
+│   │   ├── DataSeeder.java             # Seeders automáticos
+│   │   └── SecurityConfig.java
 │   │
 │   ├── controller/
-│   │   ├── AuthController.java             # Endpoints de autenticación
-│   │   ├── ChallengeController.java        # Endpoints de retos
-│   │   └── ProgressController.java         # Endpoints de progreso
+│   │   ├── AuthController.java
+│   │   ├── ChallengeController.java
+│   │   └── ProgressController.java
 │   │
 │   ├── dto/
 │   │   ├── auth/
-│   │   │   ├── LoginRequest.java
-│   │   │   ├── RegisterRequest.java
-│   │   │   └── AuthResponse.java
 │   │   ├── challenge/
-│   │   │   └── CreateChallengeRequest.java
 │   │   └── progress/
-│   │       └── CreateProgressRequest.java
 │   │
 │   ├── entity/
-│   │   ├── UserModel.java                  # Entidad Usuario
-│   │   ├── ChallengesModel.java            # Entidad Reto
-│   │   ├── UserChallengesModel.java        # Entidad Progreso
-│   │   ├── LanguageChallenge.java          # Enum Lenguajes
-│   │   └── LevelChallenge.java             # Enum Niveles
+│   │   ├── UserModel.java
+│   │   ├── ChallengesModel.java
+│   │   ├── UserChallengesModel.java
+│   │   ├── LanguageChallenge.java
+│   │   └── LevelChallenge.java
 │   │
 │   ├── repository/
-│   │   ├── UserRepository.java
-│   │   ├── ChallengesRepository.java
-│   │   └── UserChallengesRepository.java
-│   │
 │   ├── security/
-│   │   ├── JwtUtil.java                    # Utilidad JWT
-│   │   └── JwtAuthenticationFilter.java    # Filtro JWT
-│   │
-│   ├── service/
-│   │   ├── UserService.java
-│   │   ├── ChallengeService.java
-│   │   └── ProgressService.java
-│   │
-│   └── DeepcodeBackendApplication.java     # Clase principal
+│   └── service/
 │
 ├── src/main/resources/
-│   ├── application.properties              # Configuración local
-│   └── application-docker.properties       # Configuración Docker
+│   ├── application.properties
+│   └── application-docker.properties
 │
-├── Dockerfile                              # Imagen Docker
-├── docker-compose.yml                      # Orquestación Docker
-├── pom.xml                                 # Dependencias Maven
-└── README.md                               # Este archivo
+├── Dockerfile                          # Imagen Docker
+├── docker-compose.yml                  # Orquestación
+├── .dockerignore
+├── pom.xml
+├── LICENSE
+└── README.md
 ```
 
 ---
 
-## Testing
-
-### **Ejecutar tests unitarios:**
-```bash
-./mvnw test
-```
-
-### **Tests implementados:**
-- Unit tests: Services
-- Integration tests: Controllers
-- Security tests: JWT validation
-
-**Cobertura actual:** ~70%
-
----
-
-## 🗺Roadmap
+## 🗺️ Roadmap
 
 ### **Completado (Sprint 1 - Octubre/Noviembre 2025)**
 - [x] Sistema de autenticación JWT
@@ -556,8 +401,9 @@ deepcode-backend/
 - [x] CRUD de challenges
 - [x] Sistema de progreso
 - [x] Validaciones de negocio
-- [x] Dockerización
-- [x] Seeders automáticos
+- [x] Dockerización completa
+- [x] Seeders automáticos (19 challenges + 4 usuarios)
+- [x] Colección Postman con token automático
 
 ### **En desarrollo (Sprint 2 - Diciembre 2025)**
 - [ ] Sistema de badges/logros
@@ -566,9 +412,9 @@ deepcode-backend/
 - [ ] Likes en challenges
 
 ### **Planificado (Futuro)**
-- [ ] API para frontend Android (Jetpack Compose)
+- [ ] Frontend Android (Jetpack Compose)
 - [ ] Sistema de notificaciones
-- [ ] Tests automáticos con GitHub Actions
+- [ ] CI/CD con GitHub Actions
 - [ ] Deploy en Railway/Render
 - [ ] Documentación con Swagger/OpenAPI
 
@@ -593,14 +439,14 @@ Este proyecto está bajo la licencia **MIT**. Ver archivo [LICENSE](LICENSE) par
 
 ---
 
-## 👨‍Contacto
+## Contacto
 
-**Alex Izquierdo Rottier** - Desarrollador Backend Junior buscando prácticas en Spring Boot
+**Alex Izquierdo Rottier** - Desarrollador Backend buscando prácticas en Spring Boot
 
 - 📧 Email: alexdeepcodeai@gmail.com
-- 💼 LinkedIn: [linkedin.com/in/tu-perfil](https://linkedin.com/in/tu-perfil)
+- 💼 LinkedIn: [linkedin.com](https://www.linkedin.com/in/alex-izquierdo-rottier-1b4225350/)
 - 🐙 GitHub: [@AlexIzquierdo21](https://github.com/AlexIzquierdo21)
-- 🌐 Portfolio: [deepcodeia.com](https://tu-portfolio.com)
+- 🌐 Portfolio: [deepcodeia.com](https://deepcodeia.com)
 
 ---
 
@@ -613,94 +459,18 @@ Este proyecto está bajo la licencia **MIT**. Ver archivo [LICENSE](LICENSE) par
 
 ---
 
-## Estadísticas del Proyecto
+## 📊 Estadísticas del Proyecto
 
-![GitHub last commit](https://img.shields.io/github/last-commit/tu-usuario/deepcode-backend)
-![GitHub issues](https://img.shields.io/github/issues/tu-usuario/deepcode-backend)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/tu-usuario/deepcode-backend)
+![GitHub last commit](https://img.shields.io/github/last-commit/AlexIzquierdo21/deepcode_mvp_backend)
+![GitHub repo size](https://img.shields.io/github/repo-size/AlexIzquierdo21/deepcode_mvp_backend)
+![GitHub stars](https://img.shields.io/github/stars/AlexIzquierdo21/deepcode_mvp_backend?style=social)
 
 ---
 
 <div align="center">
 
-**⭐ Si este proyecto te resulta útil, dale una estrella en GitHub ⭐**
+### **Si este proyecto te resulta útil, dale una estrella en GitHub**
 
-Hecho con ❤️ por [Alex](https://github.com/AlexIzquierdo21)
+*Proyecto académico desarrollado en 6 semanas (Octubre - Noviembre 2025)*
 
 </div>
-```
-
----
-
-## **Archivos adicionales a crear:**
-
-### **1. LICENSE (MIT)**
-
-**Ubicación:** `LICENSE`
-```
-MIT License
-
-Copyright (c) 2025 DeepCodeIA
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-### **2. .gitignore**
-
-Ya deberías tenerlo, pero asegúrate de incluir:
-```
-target/
-!.mvn/wrapper/maven-wrapper.jar
-.mvn/
-mvnw
-mvnw.cmd
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### Environment ###
-.env
-application-local.properties
